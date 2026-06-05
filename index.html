@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Baryo Apolo: Imperyo ng Higanti v9</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght=700;900&family=Rajdhani:wght=600;700&display=swap');
+        
+        body {
+            margin: 0; padding: 0; background-color: #030712;
+            font-family: 'Rajdhani', sans-serif; color: #f1f5f9;
+            user-select: none; overflow: hidden; width: 100vw; height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .screen { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: absolute; top:0; left:0; }
+        
+        /* Premium Auth Grid */
+        .auth-container {
+            margin: auto; width: 92%; max-width: 360px; background: rgba(3, 7, 18, 0.96);
+            border: 2px solid #ef4444; border-radius: 16px; padding: 25px; box-sizing: border-box;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.25); text-align: center; backdrop-filter: blur(10px);
+        }
+        .auth-title { font-family: 'Cinzel', serif; color: #fbbf24; font-size: 1.9rem; letter-spacing: 2px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .auth-input {
+            width: 100%; padding: 12px; margin: 8px 0; background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: white;
+            font-family: 'Rajdhani', sans-serif; font-size: 1rem; box-sizing: border-box; outline: none;
+        }
+        .auth-input:focus { border-color: #fbbf24; background: rgba(255,255,255,0.06); }
+
+        /* HUD Designs */
+        .game-header {
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 8px 16px; background: linear-gradient(180deg, #0f172a 0%, #020617 100%); 
+            height: 15vh; box-sizing: border-box; border-bottom: 2px solid #fbbf24; z-index: 10;
+        }
+        .hud-top-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .hud-bottom-row { display: flex; margin-top: 4px; background: rgba(251, 191, 36, 0.05); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(251,191,36,0.15); justify-content: space-between;}
+        
+        h1 { margin: 0; font-family: 'Cinzel', serif; font-size: 1rem; color: #fbbf24; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .stats-container { display: flex; gap: 6px; }
+        .stat { background: #020617; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.1); }
+        .gold-text { color: #fbbf24; box-shadow: inset 0 0 5px rgba(251,191,36,0.2); }
+        .elixir-text { color: #f472b6; box-shadow: inset 0 0 5px rgba(244,114,182,0.2); }
+        .stone-text { color: #cbd5e1; box-shadow: inset 0 0 5px rgba(203,213,225,0.2); }
+
+        #gameContainer { position: relative; width: 100vw; height: 47vh; background: #14532d; overflow: hidden; }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        #controls { display: flex; flex-direction: column; gap: 4px; padding: 8px; background: #020617; height: 38vh; box-sizing: border-box; border-top: 2px solid #334155; z-index: 10; }
+        .row { display: flex; width: 100%; gap: 4px; flex: 1; }
+        
+        .btn {
+            color: white; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center; transition: all 0.1s; position: relative;
+        }
+        .collect-btn { background: linear-gradient(135deg, #16a34a 0%, #14532d 100%); box-shadow: 0 3px 0 #0f4620; }
+        .build-btn { background: linear-gradient(135deg, #475569 0%, #1e293b 100%); box-shadow: 0 3px 0 #0f172a; }
+        .attack-btn { background: linear-gradient(135deg, #dc2626 0%, #7f1d1d 100%); box-shadow: 0 3px 0 #450a0a; font-family: 'Cinzel', serif; font-weight: 900; letter-spacing: 0.5px; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn span { font-size: 0.55rem; color: #cbd5e1; font-weight: normal; margin-top: 2px; }
+
+        #victoryOverlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2,6,23,0.96);
+            z-index: 999; display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .v-card { background: #0f172a; border: 3px solid #fbbf24; border-radius: 16px; padding: 25px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 0 40px rgba(251,191,36,0.3); }
+
+        /* Lab Upgrade Panel */
+        .upgrade-layout { display: flex; height: 47vh; background: radial-gradient(circle, #1e293b 0%, #020617 100%); position: relative; }
+        .preview-box { flex: 1.1; position: relative; display: flex; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.08); }
+        .details-box { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; background: rgba(0,0,0,0.4); }
+        .trooper-selector { display: flex; gap: 4px; padding: 6px; background: #0f172a; overflow-x: auto; border-bottom: 1px solid #334155; }
+        .select-card { padding: 8px 12px; background: #1e293b; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; min-width: 75px; text-align: center; color: #94a3b8;}
+        .select-card.active { background: #fbbf24; color: #000; box-shadow: 0 0 12px rgba(251,191,36,0.5); font-weight: 900; }
+        
+        .toast-notify {
+            position: absolute; top: 16vh; left: 50%; transform: translateX(-50%);
+            background: rgba(220, 38, 38, 0.9); color: white; padding: 6px 16px;
+            border-radius: 20px; font-weight: bold; font-size: 0.8rem; z-index: 100;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: none; animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="toastBox" class="toast-notify">AUTOSAVED!</div>
+
+    <!-- AUTH SYSTEM -->
+    <div id="authScreen" class="screen">
+        <div style="position: absolute; width:100%; height:100%; background: radial-gradient(circle, #1e1b4b 0%, #030712 100%); z-index:-2;"></div>
+        <div class="auth-container" id="loginFormBox">
+            <div class="auth-title">BARYO APOLO</div>
+            <div style="font-size:0.75rem; color:#fbbf24; margin-bottom:15px; font-family:'Cinzel'; font-weight:900;">Clash Real Anatomy Engine v9</div>
+            <input type="text" id="loginUser" class="auth-input" placeholder="Pangalan ng Sundalo">
+            <input type="password" id="loginPass" class="auth-input" placeholder="Password Key">
+            <button class="btn collect-btn" style="width:100%; height:42px; margin-top:10px; font-size:0.85rem;" onclick="handleLogin()">PUMASOK SA BASE</button>
+            <p style="font-size:0.75rem; margin-top:12px; color:#94a3b8;">Bagong mandirigma? <a href="#" style="color:#ef4444; font-weight:bold; text-decoration:none;" onclick="toggleAuthMode(true)">Mag-rehistro rito</a></p>
+        </div>
+
+        <div class="auth-container" id="registerFormBox" style="display:none;">
+            <div class="auth-title">GUMAWA NG PORTAL</div>
+            <input type="text" id="regUser" class="auth-input" placeholder="Bagong Pangalan">
+            <input type="password" id="regPass" class="auth-input" placeholder="Bagong Password">
+            <button class="btn attack-btn" style="width:100%; height:42px; margin-top:10px; font-size:0.85rem;" onclick="handleRegister()">IREHISTRO ANG AKAUNT</button>
+            <p style="font-size:0.75rem; margin-top:12px; color:#94a3b8;">May account na? <a href="#" style="color:#fbbf24; font-weight:bold; text-decoration:none;" onclick="toggleAuthMode(false)">Mag-login</a></p>
+        </div>
+    </div>
+
+    <!-- VICTORY OVERLAY -->
+    <div id="victoryOverlay">
+        <div class="v-card">
+            <h2 id="vTitle" style="font-family:'Cinzel'; color:#fbbf24; margin:0 0 8px 0; font-size:1.6rem;">BARYO NAWASAK!</h2>
+            <div style="color:#4ade80; font-weight:bold; font-size:0.8rem; margin-bottom:10px;">💾 AUTOMATIC GAME PROGRESS SAVED</div>
+            <p id="vDesc" style="font-size:0.85rem; color:#e2e8f0; margin-bottom:20px; line-height:1.5; white-space:pre-line;"></p>
+            <button class="btn collect-btn" style="height:42px; width:100%; font-family:'Cinzel'; font-size:0.85rem;" onclick="backToCamp()">BALIK SA APOLO (SUNOD NA ENEMY UNLOCKED)</button>
+        </div>
+    </div>
+
+    <!-- MAIN KAMPONG BASE -->
+    <div id="baseScreen" class="screen" style="display:none;">
+        <div class="game-header">
+            <div class="hud-top-row">
+                <h1 id="welcomeUserTxt">🟢 KAMPONG APOLO RADAR</h1>
+                <div class="stats-container">
+                    <div class="stat gold-text" id="bGold">🪙 600</div>
+                    <div class="stat elixir-text" id="bElixir">🧪 500</div>
+                    <div class="stat stone-text" id="bStone">🪨 200</div>
+                </div>
+            </div>
+            <div class="hud-bottom-row">
+                <div style="font-size:0.75rem; color:#fbbf24; font-weight:bold;">MANGGAGAWA: <span id="builderLabel" style="color:#fff;">1/1 Handa</span></div>
+                <div style="font-size:0.75rem; color:#f472b6; font-weight:bold;">Hukbo: <span id="armyCount" style="color:#fff;">0</span> Sundalo</div>
+            </div>
+        </div>
+        <div id="gameContainer"><canvas id="baseCanvas"></canvas></div>
+        <div id="controls">
+            <div class="row">
+                <button class="btn collect-btn" onclick="orderGathererGold()">⛏️ MINAHAN NG GINTO<br><span>Mina: <b id="goldMineLabel">1</b> (+40 Ginto)</span></button>
+                <button class="btn collect-btn" style="background: linear-gradient(135deg, #c084fc 0%, #6b21a8 100%); box-shadow:0 3px 0 #4c1d95;" onclick="orderGathererElixir()">🧪 ELIXIR COLLECTOR<br><span>Pump: <b id="elixirPumpLabel">1</b> (+30 Elixir)</span></button>
+                <button class="btn build-btn" onclick="startBuildingStructure('kubo')">🛖 MAGTAYO NG KUBO<br><span>🪨 120 Bato</span></button>
+            </div>
+            <div class="row">
+                <button class="btn build-btn" style="background:#1e293b;" onclick="startBuildingStructure('gold_mine')">🚧 TAYO GOLDMINE<br><span>🪙100 | 🪨50</span></button>
+                <button class="btn build-btn" style="background:#1e293b;" onclick="startBuildingStructure('elixir_pump')">🚧 TAYO PUMP<br><span>🪙120 | 🪨40</span></button>
+                <button class="btn attack-btn" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow:0 3px 0 #172554;" onclick="openUpgradeScreen()">🧬 LABORATORYO NG LABAN<br><span style="color:#bfdbfe;">I-upgrade ang Lakas/Anatomy</span></button>
+            </div>
+            <div class="row" style="flex:1.1;">
+                <button class="btn attack-btn" style="width:100%; font-size:0.85rem;" onclick="initBattleField()">⚔️ LALAKBAYIN ANG DIGMAAN<br><span id="stageTargetLabel" style="font-size:0.7rem; color:#fca5a5; font-family:'Rajdhani'; font-weight:bold;">Target: Stage 1</span></button>
+            </div>
+            <div style="font-size:0.65rem; color:#fbbf24; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Mag-Sanay ng Hukbo (Barracks):</div>
+            <div class="row">
+                <button class="btn build-btn" style="background:#1d4ed8;" onclick="trainTroop('guerilla')">🏹 ARCHER (<span id="btnLvlA">Lvl.1</span>)<br><span>🧪30 Elixir</span></button>
+                <button class="btn build-btn" style="background:#334155;" onclick="trainTroop('guard')">⚔️ SWORDSMAN (<span id="btnLvlS">Lvl.1</span>)<br><span>🪙50 Ginto</span></button>
+                <button class="btn build-btn" style="background:#065f46;" onclick="trainTroop('tank')">🛡️ GIANT TANK (<span id="btnLvlT">Lvl.1</span>)<br><span>🧪70 Elixir</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPGRADE SCREEN -->
+    <div id="upgradeScreen" class="screen" style="display:none;">
+        <div class="game-header">
+            <div class="hud-top-row">
+                <h1 style="color:#2563eb; font-family:'Cinzel';">🧬 BARYO ARMORY LAB</h1>
+                <div class="stats-container">
+                    <div class="stat gold-text" id="uGold">🪙 600</div>
+                    <div class="stat elixir-text" id="uElixir">🧪 500</div>
+                </div>
+            </div>
+            <div class="trooper-selector">
+                <div class="select-card active" id="card_guerilla" onclick="selectUpgradeTroop('guerilla')">🏹 ARCHER</div>
+                <div class="select-card" id="card_guard" onclick="selectUpgradeTroop('guard')">⚔️ SWORDSMAN</div>
+                <div class="select-card" id="card_tank" onclick="selectUpgradeTroop('tank')">🛡️ TANK</div>
+            </div>
+        </div>
+        <div class="upgrade-layout">
+            <div class="preview-box">
+                <canvas id="upgradeCanvas"></canvas>
+                <div style="position:absolute; bottom:10px; font-weight:bold; font-size:0.8rem; background:rgba(0,0,0,0.7); padding:4px 12px; border-radius:20px; border:1px solid #2563eb;" id="previewTitle">ARCHER MODEL PREVIEW</div>
+            </div>
+            <div class="details-box">
+                <div>
+                    <h3 id="detailsName" style="margin:0 0 4px 0; color:#fbbf24; font-family:'Cinzel'; font-size:1.1rem;">ARCHER</h3>
+                    <p id="detailsLevel" style="margin:0 0 10px 0; font-size:0.85rem; color:#4ade80; font-weight:bold;">Kasalukuyang Antas: Level 1</p>
+                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin-bottom:10px;">
+                    <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px;">
+                        <div id="statHp">❤️ Buhay (HP): 160</div>
+                        <div id="statDmg">🔥 Pinsala (Damage): 60</div>
+                        <div id="statRange">🎯 Layo ng Atake: Malayo</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn collect-btn" style="width:100%; height:44px; margin-bottom:6px; font-size:0.8rem;" id="upgradeActionBtn" onclick="executeTroopUpgrade()">🧬 PATINDINGIN ANTAS<br><span id="upgradeCostLabel" style="color:white; font-weight:bold;">🧪 200 Elixir</span></button>
+                    <button class="btn build-btn" style="width:100%; height:32px; background:#475569;" onclick="closeUpgradeScreen()">❌ BALIK SA BASE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BATTLE SCREEN -->
+    <div id="battleScreen" class="screen" style="display:none;">
+        <div class="game-header">
+            <div class="hud-top-row">
+                <h1 id="battleTitle" style="color:#ef4444; font-family:'Cinzel';">STAGE 1</h1>
+                <div class="stats-container">
+                    <div class="stat" id="fortHpLabel" style="color:#fca5a5; background:#7f1d1d; border-color:#ef4444;">KUTA NG KAAWAY: 1500</div>
+                </div>
+            </div>
+            <div class="hud-bottom-row" style="background:rgba(239, 68, 68, 0.08); border-color: rgba(239,68,68,0.3);">
+                <div id="battleStatusLabel" style="font-size:0.75rem; color:#f87171; font-weight:bold; text-transform:uppercase;">🚨 SINASALAKAY ANG BARYO!</div>
+                <div style="font-size:0.75rem; color:#93c5fd;">Kasama: A:<span id="fCountA">0</span> | S:<span id="fCountS">0</span> | T:<span id="fCountT">0</span></div>
+            </div>
+        </div>
+        <div id="gameContainer"><canvas id="battleCanvas"></canvas></div>
+        <div id="controls" style="height:38vh; padding:8px;">
+            <div style="font-size:0.65rem; color:#facc15; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">I-deploy ang mga Maangas mong Sundalo:</div>
+            <div class="row">
+                <button class="btn build-btn" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);" onclick="deployBattleTroop('guerilla')">🏹 ARCHER DEPLOY<br><span>Reserba: <b id="bCountA">0</b></span></button>
+                <button class="btn build-btn" style="background:linear-gradient(135deg, #475569, #334155);" onclick="deployBattleTroop('guard')">⚔️ SWORDSMAN DEPLOY<br><span>Reserba: <b id="bCountS">0</b></span></button>
+                <button class="btn build-btn" style="background:linear-gradient(135deg, #059669, #065f46);" onclick="deployBattleTroop('tank')">🛡️ GIANT TANK DEPLOY<br><span>Reserba: <b id="bCountT">0</b></span></button>
+            </div>
+            <div class="row" style="flex:0.4; background: rgba(239, 68, 68, 0.15); padding: 4px; border-radius: 4px; align-items: center; justify-content: center; border: 1px solid rgba(239,68,68,0.3);">
+                <div style="font-size:0.85rem; color:#fca5a5; font-weight:bold; font-family:'Rajdhani';" id="enemyLeftLabel">Natitirang Kawal: 15 / 15</div>
+            </div>
+            <button class="btn build-btn" style="height:36px; background:#1e293b; font-size:0.75rem; font-family:'Cinzel';" onclick="backToCamp()">🏃 UMATRAS BALIK SA BASE</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let troopLevels = { guerilla: 1, guard: 1, tank: 1 };
+        let gameData = { gold: 1200, elixir: 1000, stone: 400, currentStage: 1, army: { guerilla: 15, guard: 12, tank: 5 } };
+
+        // EXPONENTIAL HARDCORE DIFFICULTY SCALING FOR STAGES
+        const campaigns = {
+            1: { name: "Baryo Makisig (Madali)", boss: "Heneral Makisig", enemyCount: 12, fortHp: 1500, mobHp: 150, mobDmg: 20 },
+            2: { name: "Baryo Mausok (Katamtaman)", boss: "Heneral Kous", enemyCount: 22, fortHp: 5500, mobHp: 380, mobDmg: 55 },
+            3: { name: "Baryo Kalawan (Mahirap)", boss: "Pinunong Wan", enemyCount: 32, fortHp: 16000, mobHp: 900, mobDmg: 120 },
+            4: { name: "Gitnang Langit (Sumpa)", boss: "Luna Makaraig", enemyCount: 45, fortHp: 45000, mobHp: 2200, mobDmg: 280 },
+            5: { name: "San Luna Tonio (Katapusan)", boss: "Haring Tonio", enemyCount: 60, fortHp: 120000, mobHp: 6000, mobDmg: 650 }
+        };
+
+        let structures = [
+            { id: 1, type: 'townhall', gridX: 4, gridY: 4, state: 'ready', progress: 100 },
+            { id: 2, type: 'kubo', gridX: 2, gridY: 3, state: 'ready', progress: 100 },
+            { id: 3, type: 'gold_mine', gridX: 6, gridY: 2, state: 'ready', progress: 100 },
+            { id: 4, type: 'elixir_pump', gridX: 2, gridY: 6, state: 'ready', progress: 100 }
+        ];
+
+        let selectedUpgradeTroopType = 'guerilla';
+        let baseBuilders = [{ id: 1, x: 120, y: 160, state: 'idle', targetId: null, frame: 0 }];
+        let baseGatherers = [];
+        let activeTroops = []; let enemyTroops = []; let damageTexts = [];
+        let isVictory = false; let enemiesSpawned = 0; let nextEnemySpawn = 0; let curFortHp = 1500; let curEnemyLeft = 12;
+
+        let baseCanvas = document.getElementById("baseCanvas");
+        let battleCanvas = document.getElementById("battleCanvas");
+        let upgradeCanvas = document.getElementById("upgradeCanvas");
+
+        function toggleAuthMode(regMode) {
+            document.getElementById("loginFormBox").style.display = regMode ? "none" : "block";
+            document.getElementById("registerFormBox").style.display = regMode ? "block" : "none";
+        }
+
+        function triggerToast() {
+            let tb = document.getElementById("toastBox");
+            tb.style.display = "block";
+            setTimeout(() => { tb.style.display = "none"; }, 1500);
+        }
+
+        function handleRegister() {
+            let u = document.getElementById("regUser").value.trim();
+            let p = document.getElementById("regPass").value.trim();
+            if(!u || !p) return alert("Sulat ang kulang na detalye!");
+            if(localStorage.getItem("apolo_v9_" + u)) return alert("May gumagamit na ng pangalang ito!");
+            let pack = { username: u, password: p, state: gameData, structures: structures, troopLevels: troopLevels };
+            localStorage.setItem("apolo_v9_" + u, JSON.stringify(pack));
+            alert("Mandirigma ay Tagumpay na Narehistro!");
+            toggleAuthMode(false);
+        }
+
+        function handleLogin() {
+            let u = document.getElementById("loginUser").value.trim();
+            let p = document.getElementById("loginPass").value.trim();
+            let raw = localStorage.getItem("apolo_v9_" + u);
+            if(!raw) return alert("Walang nakarehistrong account sa pangalang yan!");
+            let db = JSON.parse(raw);
+            if(db.password !== p) return alert("Maling Password Key!");
+
+            currentUser = u; gameData = db.state;
+            if(db.structures) structures = db.structures;
+            if(db.troopLevels) troopLevels = db.troopLevels;
+
+            document.getElementById("authScreen").style.display = "none";
+            document.getElementById("baseScreen").style.display = "flex";
+            document.getElementById("welcomeUserTxt").innerText = `🟢 BARYO APOLO: IMPERYO NI ${u.toUpperCase()}`;
+            window.gCtx = adjustCanvas(baseCanvas); 
+            syncHUD();
+        }
+
+        function autoSaveGame() {
+            if(!currentUser) return;
+            let db = JSON.parse(localStorage.getItem("apolo_v9_" + currentUser));
+            db.state = gameData; db.structures = structures; db.troopLevels = troopLevels;
+            localStorage.setItem("apolo_v9_" + currentUser, JSON.stringify(db));
+            triggerToast();
+        }
+
+        function adjustCanvas(canvas) {
+            let dpr = window.devicePixelRatio || 1;
+            canvas.width = canvas.clientWidth * dpr; canvas.height = canvas.clientHeight * dpr;
+            let ctx = canvas.getContext("2d"); ctx.scale(dpr, dpr); return ctx;
+        }
+
+        function syncHUD() {
+            document.getElementById("bGold").innerText = `🪙 ${gameData.gold}`;
+            document.getElementById("bElixir").innerText = `🧪 ${gameData.elixir}`;
+            document.getElementById("bStone").innerText = `🪨 ${gameData.stone}`;
+            document.getElementById("uGold").innerText = `🪙 ${gameData.gold}`;
+            document.getElementById("uElixir").innerText = `🧪 ${gameData.elixir}`;
+
+            document.getElementById("btnLvlA").innerText = `Lvl.${troopLevels.guerilla}`;
+            document.getElementById("btnLvlS").innerText = `Lvl.${troopLevels.guard}`;
+            document.getElementById("btnLvlT").innerText = `Lvl.${troopLevels.tank}`;
+
+            let gm = structures.filter(s => s.type === 'gold_mine' && s.state === 'ready').length;
+            let ep = structures.filter(s => s.type === 'elixir_pump' && s.state === 'ready').length;
+            
+            document.getElementById("goldMineLabel").innerText = gm;
+            document.getElementById("elixirPumpLabel").innerText = ep;
+            document.getElementById("armyCount").innerText = gameData.army.guerilla + gameData.army.guard + gameData.army.tank;
+            
+            let currentCampaign = campaigns[gameData.currentStage];
+            document.getElementById("stageTargetLabel").innerText = `ATTACK TARGET ➔ STAGE ${gameData.currentStage}: ${currentCampaign.name.toUpperCase()}`;
+            
+            let idleB = baseBuilders.filter(b => b.state === 'idle').length;
+            document.getElementById("builderLabel").innerText = `${idleB}/${baseBuilders.length} Handa`;
+
+            document.getElementById("bCountA").innerText = gameData.army.guerilla;
+            document.getElementById("bCountS").innerText = gameData.army.guard;
+            document.getElementById("bCountT").innerText = gameData.army.tank;
+            document.getElementById("fCountA").innerText = gameData.army.guerilla;
+            document.getElementById("fCountS").innerText = gameData.army.guard;
+            document.getElementById("fCountT").innerText = gameData.army.tank;
+        }
+
+        function isoX(gx, gy, bw) { return (bw / 2) + (gx - gy) * 26; }
+        function isoY(gx, gy) { return 60 + (gx + gy) * 14; }
+
+        function startBuildingStructure(type) {
+            let goldCost = type === 'kubo' ? 0 : (type === 'gold_mine' ? 100 : 120);
+            let stoneCost = type === 'kubo' ? 120 : (type === 'gold_mine' ? 50 : 40);
+            if(gameData.gold < goldCost || gameData.stone < stoneCost) return alert("Kulang ang iyong nakaimbak na materyales!");
+            let freeBuilder = baseBuilders.find(b => b.state === 'idle');
+            if(!freeBuilder) return alert("Kasalukuyang may ginagawa pa ang Manggagawa!");
+
+            gameData.gold -= goldCost; gameData.stone -= stoneCost;
+            let rx = Math.floor(Math.random() * 6) + 1; let ry = Math.floor(Math.random() * 6) + 1;
+            structures.push({ id: structures.length + 1, type: type, gridX: rx, gridY: ry, state: 'building', progress: 0 });
+            freeBuilder.state = 'walking'; freeBuilder.targetId = structures.length;
+            syncHUD();
+            autoSaveGame();
+        }
+
+        function orderGathererGold() {
+            let activeMine = structures.find(s => s.type === 'gold_mine' && s.state === 'ready');
+            if(!activeMine) return alert("Magpatayo muna ng Minahan ng Ginto sa Manggagawa!");
+            baseGatherers.push({ x: isoX(4,4,baseCanvas.clientWidth), y: isoY(4,4), type: 'gold', state: 'go_to', targetGX: activeMine.gridX, targetGY: activeMine.gridY, frame: 0, hold: 0 });
+        }
+
+        function orderGathererElixir() {
+            let activePump = structures.find(s => s.type === 'elixir_pump' && s.state === 'ready');
+            if(!activePump) return alert("Magpatayo muna ng Elixir Pump sa iyong base!");
+            baseGatherers.push({ x: isoX(4,4,baseCanvas.clientWidth), y: isoY(4,4), type: 'elixir', state: 'go_to', targetGX: activePump.gridX, targetGY: activePump.gridY, frame: 0, hold: 0 });
+        }
+
+        function openUpgradeScreen() {
+            document.getElementById("baseScreen").style.display = "none";
+            document.getElementById("upgradeScreen").style.display = "flex";
+            window.uCtx = adjustCanvas(upgradeCanvas); window.gCtx = null;
+            selectUpgradeTroop(selectedUpgradeTroopType);
+        }
+
+        function closeUpgradeScreen() {
+            document.getElementById("upgradeScreen").style.display = "none";
+            document.getElementById("baseScreen").style.display = "flex";
+            window.uCtx = null; window.gCtx = adjustCanvas(baseCanvas);
+            syncHUD();
+        }
+
+        function selectUpgradeTroop(type) {
+            selectedUpgradeTroopType = type;
+            document.querySelectorAll('.select-card').forEach(c => c.classList.remove('active'));
+            document.getElementById(`card_${type}`).classList.add('active');
+
+            let lvl = troopLevels[type];
+            let hp = type === 'tank' ? 550 : (type === 'guard' ? 300 : 160);
+            let dmg = type === 'tank' ? 26 : (type === 'guard' ? 55 : 60);
+            
+            let currentHp = Math.floor(hp * (1 + (lvl - 1) * 0.35));
+            let currentDmg = Math.floor(dmg * (1 + (lvl - 1) * 0.30));
+
+            let names = { guerilla: "HIGH RANK ARCHER", guard: "MUSCULAR SWORDSMAN", tank: "ARMORED GIANT TANK" };
+            let ranges = { guerilla: "Malayong Distansya (130px)", guard: "Malapitan (25px)", tank: "Malapitan (25px)" };
+
+            document.getElementById("detailsName").innerText = names[type];
+            document.getElementById("detailsLevel").innerText = `Kasalukuyang Antas: Level ${lvl}`;
+            document.getElementById("statHp").innerText = `❤️ Buhay (HP): ${currentHp} (Susunod: +${Math.floor(hp*0.35)})`;
+            document.getElementById("statDmg").innerText = `🔥 Pinsala (Damage): ${currentDmg} (Susunod: +${Math.floor(dmg*0.30)})`;
+            document.getElementById("statRange").innerText = `🎯 Uri: ${ranges[type]}`;
+            document.getElementById("previewTitle").innerText = `${names[type]} LAB MODEL`;
+
+            let currency = type === 'guard' ? "Ginto" : "Elixir";
+            let icon = type === 'guard' ? "🪙" : "🧪";
+            let cost = lvl * 350;
+            document.getElementById("upgradeCostLabel").innerText = `${icon} ${cost} ${currency}`;
+        }
+
+        function executeTroopUpgrade() {
+            let type = selectedUpgradeTroopType;
+            let lvl = troopLevels[type];
+            let cost = lvl * 350;
+
+            if (type === 'guard') {
+                if(gameData.gold < cost) return alert("Kulang ang Ginto para sa laboratory research!");
+                gameData.gold -= cost;
+            } else {
+                if(gameData.elixir < cost) return alert("Kulang ang Elixir para sa laboratory research!");
+                gameData.elixir -= cost;
+            }
+
+            troopLevels[type]++;
+            alert(`🎉 Tagumpay! Tumaas sa Level ${troopLevels[type]} ang lakas at katawan ng sundalo!`);
+            autoSaveGame();
+            syncHUD();
+            selectUpgradeTroop(type);
+        }
+
+        function trainTroop(type) {
+            if (type === 'guerilla' && gameData.elixir >= 30) { gameData.elixir -= 30; gameData.army.guerilla++; }
+            else if (type === 'guard' && gameData.gold >= 50) { gameData.gold -= 50; gameData.army.guard++; }
+            else if (type === 'tank' && gameData.elixir >= 70) { gameData.elixir -= 70; gameData.army.tank++; }
+            else { return alert("Kulang ang yaman mo para magsanay ng bagong kawal!"); }
+            syncHUD();
+            autoSaveGame();
+        }
+
+        function deployBattleTroop(type) {
+            if (gameData.army[type] <= 0) return;
+            gameData.army[type]--;
+            let bh = battleCanvas.clientHeight;
+            let lvl = troopLevels[type];
+            let hp = type === 'tank' ? 550 : (type === 'guard' ? 300 : 160);
+            let dmg = type === 'tank' ? 26 : (type === 'guard' ? 55 : 60);
+
+            let finalHp = Math.floor(hp * (1 + (lvl - 1) * 0.35));
+            let finalDmg = Math.floor(dmg * (1 + (lvl - 1) * 0.30));
+            let rng = type === 'guerilla' ? 130 : 25;
+
+            activeTroops.push({
+                x: 70, y: bh - 24 - (Math.random()*15), type: type, hp: finalHp, maxHp: finalHp,
+                dmg: finalDmg, range: rng, speed: type === 'tank' ? 0.9 : 1.5, lastAttack: 0, frame: Math.random()*100
+            });
+            syncHUD();
+        }
+
+        function initBattleField() {
+            document.getElementById("baseScreen").style.display = "none";
+            document.getElementById("battleScreen").style.display = "flex";
+            window.bCtx = adjustCanvas(battleCanvas); window.gCtx = null; 
+
+            let data = campaigns[gameData.currentStage];
+            curFortHp = data.fortHp; curEnemyLeft = data.enemyCount;
+            enemiesSpawned = 0; nextEnemySpawn = Date.now() + 200;
+            activeTroops = []; enemyTroops = []; damageTexts = []; isVictory = false;
+            
+            document.getElementById("battleTitle").innerText = `STAGE ${gameData.currentStage}: ${data.name.toUpperCase()}`;
+            document.getElementById("fortHpLabel").innerText = `KUTA NG KAAWAY HP: ${curFortHp}`;
+            document.getElementById("enemyLeftLabel").innerText = `Natitirang Kawal: ${curEnemyLeft} / ${data.enemyCount}`;
+            
+            let bh = battleCanvas.clientHeight;
+            // Deploy Hero Apolo
+            activeTroops.push({
+                x: 45, y: bh - 28, type: 'apolo', 
+                hp: 3000 + (gameData.currentStage * 1500), maxHp: 3000 + (gameData.currentStage * 1500),
+                dmg: 180 + (gameData.currentStage * 120), range: 35, speed: 1.2, lastAttack: 0, frame: 0
+            });
+            syncHUD();
+        }
+
+        function backToCamp() { 
+            document.getElementById("battleScreen").style.display = "none"; 
+            document.getElementById("victoryOverlay").style.display = "none"; 
+            window.bCtx = null; 
+            document.getElementById("baseScreen").style.display = "flex";
+            window.gCtx = adjustCanvas(baseCanvas); 
+            syncHUD(); 
+        }
+
+        function checkWin() {
+            if (isVictory) return;
+            if (curFortHp <= 0 && curEnemyLeft <= 0) {
+                isVictory = true;
+                let prize = gameData.currentStage * 1500;
+                gameData.gold += prize; gameData.elixir += prize; gameData.stone += Math.floor(prize/3);
+                
+                let nxt = gameData.currentStage;
+                if(gameData.currentStage < 5) {
+                    gameData.currentStage += 1; // Auto-unlock next stage!
+                }
+                
+                // CRUCIAL REQUIREMENT: AUTO-SAVE IMMEDIATELY ON WIN
+                autoSaveGame();
+
+                document.getElementById("vDesc").innerText = `💥 KUTA AY BUONG NALIPOL!\n\nNapasuko mo ang depensa ng kalaban.\n\n🎁 PREMYONG NAKUHA:\n🪙 Ginto: +${prize}\n🧪 Elixir: +${prize}\n🪨 Bato: +${Math.floor(prize/3)}\n\n🔓 SUNOD NA LABANAN UNLOCKED: Stage ${gameData.currentStage}!`;
+                document.getElementById("victoryOverlay").style.display = "flex";
+            }
+        }
+
+        // Real Proportional Human Muscle Rendering Engine (Clash Style)
+        function drawRealisticSprite(ctx, x, y, type, isAttacking, frame) {
+            ctx.save();
+            let walkCycle = Math.sin(frame * 0.28);
+            let legL = walkCycle * 0.55; let legR = -walkCycle * 0.55;
+            let att = isAttacking ? Math.sin(frame * 0.6) * 0.9 : 0;
+
+            // Ground realistic Drop Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath(); ctx.ellipse(x, y + 2, 10, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+
+            let isEnemy = (type === 'enemy');
+            ctx.translate(x, y);
+            if(isEnemy) ctx.scale(-1, 1); // Face left for enemies
+
+            // 1. ANATOMY LEGS (Thick 3D shapes)
+            ctx.fillStyle = '#3f1a04';
+            // Left Boot
+            ctx.save(); ctx.translate(-2, -3); ctx.rotate(legL); ctx.fillRect(-2, 0, 4, 5); ctx.fillStyle='#1e0a00'; ctx.fillRect(-2.5, 4, 5, 2.5); ctx.restore();
+            // Right Boot
+            ctx.save(); ctx.translate(2, -3); ctx.rotate(legR); ctx.fillStyle='#3f1a04'; ctx.fillRect(-2, 0, 4, 5); ctx.fillStyle='#1e0a00'; ctx.fillRect(-1.5, 4, 5, 2.5); ctx.restore();
+
+            // 2. MUSCULAR TORSO (Chunky build, layered armor)
+            let bob = Math.abs(walkCycle) * -1.5;
+            ctx.translate(0, -4 + bob);
+
+            if (type === 'apolo') {
+                ctx.fillStyle = '#dc2626'; // Red Hero Cape
+                ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(-14, 5); ctx.lineTo(-2, 2); ctx.fill();
+                ctx.fillStyle = '#fbbf24'; // Shaded Solid Gold Breastplate
+                ctx.beginPath(); ctx.roundRect(-6, -14, 12, 11, 3); ctx.fill();
+                ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(-6, -13, 3, 0, Math.PI*2); ctx.fill(); ctx.arc(6, -13, 3, 0, Math.PI*2); ctx.fill();
+            } 
+            else if (type === 'guard' || type === 'enemy') {
+                ctx.fillStyle = type === 'enemy' ? '#7f1d1d' : '#b45309'; // Combat Kilt
+                ctx.fillRect(-5, -3, 10, 4); 
+                ctx.fillStyle = '#fbcfe8'; // Buff skin torso
+                ctx.beginPath(); ctx.roundRect(-5, -12, 10, 9, 2); ctx.fill();
+                // Chest Shading line
+                ctx.strokeStyle = '#f4a261'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0, -11); ctx.lineTo(0, -5); ctx.stroke();
+            } 
+            else if (type === 'guerilla') {
+                ctx.fillStyle = '#166534'; // Forest Ranger Tunic
+                ctx.beginPath(); ctx.roundRect(-5, -12, 10, 10, 2); ctx.fill();
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(-5, -5, 10, 2); // Heavy Leather Belt
+            } 
+            else if (type === 'tank') {
+                ctx.fillStyle = '#475569'; // Heavy Steel Core Armor
+                ctx.beginPath(); ctx.roundRect(-8, -17, 16, 15, 4); ctx.fill();
+                ctx.fillStyle = '#64748b'; ctx.fillRect(-6, -14, 12, 9);
+            }
+
+            // 3. HANDS & WEAPON SWING DYNAMICS
+            ctx.fillStyle = '#fbcfe8'; // Skin tone
+            
+            // Shield Hand (Left)
+            ctx.save();
+            ctx.translate(-5, -10);
+            if(type === 'tank') {
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(-5, -2, 4, 11); // Heavy Bulwark Shield
+                ctx.fillStyle = '#fbbf24'; ctx.fillRect(-4, 2, 2, 4);
+            } else {
+                ctx.rotate(-0.2 - legR*0.2); ctx.fillRect(-2, 0, 2.5, 6);
+            }
+            ctx.restore();
+
+            // Attacking Slash Hand (Right)
+            ctx.save();
+            ctx.translate(5, -10);
+            ctx.rotate(0.3 + att * 1.6); // Slash rotation arc
+            ctx.fillRect(0, 0, 2.8, 7);
+
+            if (type === 'apolo') {
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; // Glowing Cyan Excalibur
+                ctx.beginPath(); ctx.moveTo(1.5, 5); ctx.lineTo(1.5, -15); ctx.stroke();
+                ctx.fillStyle = '#d97706'; ctx.fillRect(-0.5, 5, 4, 2); 
+            } else if (type === 'guard' || type === 'enemy') {
+                ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2; // Sharp Iron Claymore
+                ctx.beginPath(); ctx.moveTo(1.4, 4); ctx.lineTo(1.4, -10); ctx.stroke();
+            } else if (type === 'guerilla') {
+                ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2; // Longbow Compound Curved
+                ctx.beginPath(); ctx.arc(4, 2, 6, -Math.PI/2, Math.PI/2); ctx.stroke();
+            }
+            ctx.restore();
+
+            // 4. FACE & HEAD ANATOMY (With Hair and Beard)
+            ctx.translate(0, -13);
+            ctx.fillStyle = '#fbcfe8'; ctx.beginPath(); ctx.arc(0, -3.5, 4.2, 0, Math.PI * 2); ctx.fill();
+
+            if (type === 'apolo') {
+                ctx.fillStyle = '#fbbf24'; ctx.fillRect(-5, -9, 10, 3.5); // King's Crown
+                ctx.fillStyle = '#d97706'; ctx.fillRect(-3.5, -5.5, 7, 3); 
+            } else if (type === 'guard' || type === 'enemy') {
+                ctx.fillStyle = type === 'enemy' ? '#450a0a' : '#fbbf24'; // Yellow CoC Hair vs Angry Enemy Hair
+                ctx.beginPath(); ctx.arc(0, -6.5, 4.5, Math.PI, 0); ctx.fill(); ctx.fillRect(-4.5, -6.5, 9, 4);
+                ctx.fillStyle = type === 'enemy' ? '#1a0505' : '#b45309'; // Huge Warrior Mustache
+                ctx.fillRect(-3.5, -1.5, 7, 2.5);
+            } else if (type === 'guerilla') {
+                ctx.fillStyle = '#f472b6'; // Hot Pink Archer Trim Hair
+                ctx.beginPath(); ctx.arc(0, -5.5, 4.5, Math.PI, 0); ctx.fill(); ctx.fillRect(-4.5, -5.5, 9, 5.5);
+                ctx.fillStyle = '#fff'; ctx.fillRect(-3, -7.5, 6, 1.8);
+            } else if (type === 'tank') {
+                ctx.fillStyle = '#334155'; // Iron Helmet Spiked Dome
+                ctx.beginPath(); ctx.arc(0, -4, 5, Math.PI, 0); ctx.fill(); ctx.fillRect(-5, -4, 10, 5);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(-1.5, -2, 3, 1.5); // Glowing Red Slit Eye
+            }
+
+            ctx.restore();
+        }
+
+        // HD CINEMATIC PREVIEW
+        function drawHDRealisticTrooper(ctx, w, h, type, frame) {
+            let cx = w / 2; let cy = h / 2 + 20;
+            let br = Math.sin(frame * 0.05) * 4;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(cx, cy + 60, 55, 15, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#2d1510'; ctx.fillRect(cx - 22, cy + 15, 16, 45); ctx.fillRect(cx + 6, cy + 15, 16, 45);
+
+            let bodyG = ctx.createLinearGradient(cx-30, cy-50, cx+30, cy+15);
+            if(type === 'guerilla') { bodyG.addColorStop(0, '#165327'); bodyG.addColorStop(1, '#052e16'); }
+            else if(type === 'guard') { bodyG.addColorStop(0, '#1e293b'); bodyG.addColorStop(1, '#0f172a'); }
+            else { bodyG.addColorStop(0, '#475569'); bodyG.addColorStop(1, '#1e293b'); }
+            
+            ctx.fillStyle = bodyG; ctx.fillRect(cx - 30, cy - 50 + br, 60, 72);
+            ctx.fillStyle = '#ffedd5'; ctx.beginPath(); ctx.arc(cx, cy - 80 + br, 25, 0, Math.PI*2); ctx.fill();
+
+            if (type === 'guerilla') {
+                ctx.fillStyle = '#f472b6'; ctx.beginPath(); ctx.moveTo(cx - 26, cy - 72 + br); ctx.lineTo(cx, cy - 110 + br); ctx.lineTo(cx + 26, cy - 72 + br); ctx.fill();
+                ctx.strokeStyle = '#b45309'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(cx - 50, cy, 60, -Math.PI/2, Math.PI/2); ctx.stroke();
+            } else if (type === 'guard') {
+                ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(cx, cy - 88 + br, 27, Math.PI, 0); ctx.fill();
+                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(cx + 36, cy - 95 + br, 14, 110);
+            } else if (type === 'tank') {
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(cx - 32, cy - 100 + br, 64, 22);
+                ctx.fillStyle = '#334155'; ctx.fillRect(cx - 70, cy - 30 + br, 34, 95);
+            }
+            ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 16px Rajdhani'; ctx.textAlign = 'center';
+            ctx.fillText(`ANATOMY MODEL LVL ${troopLevels[type]}`, cx, cy - 125 + br);
+            ctx.restore();
+        }
+
+        function drawCoCBuilding(ctx, x, y, type, state, progress) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x, y, 26, 14, 0, 0, Math.PI*2); ctx.fill();
+
+            if (state === 'building') {
+                ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.strokeRect(x - 12, y - 25, 24, 25);
+                ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x - 15, y - 35, 30, 4);
+                ctx.fillStyle = '#fbbf24'; ctx.fillRect(x - 15, y - 35, (progress / 100) * 30, 4);
+                ctx.restore(); return;
+            }
+
+            if (type === 'townhall') {
+                ctx.fillStyle = '#334155'; ctx.fillRect(x - 18, y - 32, 36, 30);
+                ctx.fillStyle = '#991b1b'; ctx.beginPath(); ctx.moveTo(x - 22, y - 32); ctx.lineTo(x, y - 52); ctx.lineTo(x + 22, y - 32); ctx.fill();
+            } else if (type === 'kubo') {
+                ctx.fillStyle = '#78350f'; ctx.fillRect(x - 14, y - 24, 28, 22);
+                ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.moveTo(x - 18, y - 24); ctx.lineTo(x, y - 38); ctx.lineTo(x + 18, y - 24); ctx.fill();
+            } else if (type === 'gold_mine') {
+                ctx.fillStyle = '#475569'; ctx.fillRect(x - 15, y - 20, 30, 18);
+                ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(x, y - 6, 6, 0, Math.PI*2); ctx.fill();
+            } else if (type === 'elixir_pump') {
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x - 14, y - 26, 28, 24);
+                ctx.fillStyle = '#db2777'; ctx.fillRect(x - 7, y - 20, 14, 15);
+            }
+            ctx.restore();
+        }
+
+        let globalFrames = 0;
+        function loop() {
+            globalFrames++;
+
+            if (window.uCtx) {
+                let ctx = window.uCtx; let w = upgradeCanvas.clientWidth; let h = upgradeCanvas.clientHeight;
+                ctx.fillStyle = '#030712'; ctx.fillRect(0,0,w,h);
+                drawHDRealisticTrooper(ctx, w, h, selectedUpgradeTroopType, globalFrames);
+            }
+            else if (window.gCtx) {
+                let ctx = window.gCtx; let w = baseCanvas.clientWidth; let h = baseCanvas.clientHeight;
+                ctx.fillStyle = '#14532d'; ctx.fillRect(0,0,w,h);
+
+                ctx.strokeStyle = 'rgba(251,191,36,0.06)';
+                for(let i=0; i<=12; i++) {
+                    ctx.beginPath(); ctx.moveTo(isoX(i, 0, w), isoY(i, 0)); ctx.lineTo(isoX(i, 12, w), isoY(i, 12)); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(isoX(0, i, w), isoY(0, i)); ctx.lineTo(isoX(12, i, w), isoY(12, i)); ctx.stroke();
+                }
+
+                structures.forEach(s => { drawCoCBuilding(ctx, isoX(s.gridX, s.gridY, w), isoY(s.gridX, s.gridY), s.type, s.state, s.progress); });
+
+                baseBuilders.forEach(b => {
+                    b.frame++;
+                    if (b.state === 'idle') {
+                        let dx = isoX(4,4,w) - b.x; let dy = (isoY(4,4)+15) - b.y;
+                        if(Math.abs(dx) > 3) b.x += Math.sign(dx) * 1.2;
+                        if(Math.abs(dy) > 3) b.y += Math.sign(dy) * 1.2;
+                        drawRealisticSprite(ctx, b.x, b.y, 'guard', false, b.frame);
+                    } else if (b.state === 'walking') {
+                        let t = structures.find(s => s.id === b.targetId); if(!t) { b.state = 'idle'; return; }
+                        let dx = isoX(t.gridX, t.gridY, w) - b.x; let dy = isoY(t.gridX, t.gridY) - b.y;
+                        let dst = Math.sqrt(dx*dx + dy*dy);
+                        if(dst > 5) { b.x += (dx/dst)*1.6; b.y += (dy/dst)*1.6; drawRealisticSprite(ctx, b.x, b.y, 'guard', false, b.frame); } else { b.state = 'pukpok'; }
+                    } else if (b.state === 'pukpok') {
+                        let t = structures.find(s => s.id === b.targetId); if(!t) { b.state = 'idle'; return; }
+                        t.progress += 0.5; if(b.frame % 20 === 0) damageTexts.push({ x: b.x, y: b.y-25, txt: "🔨 TAYO", c: '#fbbf24' });
+                        if(t.progress >= 100) { t.progress=100; t.state='ready'; b.state='idle'; autoSaveGame(); syncHUD(); }
+                        drawRealisticSprite(ctx, b.x, b.y, 'guard', true, b.frame);
+                    }
+                });
+
+                baseGatherers.forEach((g, idx) => {
+                    g.frame++; let tx = isoX(g.targetGX, g.targetGY, w); let ty = isoY(g.targetGX, g.targetGY);
+                    if (g.state === 'go_to') {
+                        let dx = tx - g.x; let dy = ty - g.y; let d = Math.sqrt(dx*dx + dy*dy);
+                        if (d > 5) { g.x += (dx/d)*1.8; g.y += (dy/d)*1.8; drawRealisticSprite(ctx, g.x, g.y, 'guerilla', false, g.frame); } else { g.state = 'mining'; g.hold = Date.now(); }
+                    } else if (g.state === 'mining') {
+                        if (Date.now() - g.hold > 1200) g.state = 'return_base';
+                        drawRealisticSprite(ctx, g.x, g.y, 'guerilla', true, g.frame);
+                    } else if (g.state === 'return_base') {
+                        let hx = isoX(4,4,w); let hy = isoY(4,4); let dx = hx - g.x; let dy = hy - g.y; let d = Math.sqrt(dx*dx + dy*dy);
+                        if (d > 5) { g.x += (dx/d)*1.6; g.y += (dy/d)*1.6; drawRealisticSprite(ctx, g.x, g.y, 'guerilla', false, g.frame); } else {
+                            if (g.type === 'gold') { gameData.gold += 40; damageTexts.push({ x: hx, y: hy - 20, txt: "+40 🪙", c: '#fbbf24' }); }
+                            if (g.type === 'elixir') { gameData.elixir += 30; damageTexts.push({ x: hx, y: hy - 20, txt: "+30 🧪", c: '#f472b6' }); }
+                            autoSaveGame(); syncHUD(); baseGatherers.splice(idx, 1);
+                        }
+                    }
+                });
+            }
+            else if (window.bCtx) {
+                let ctx = window.bCtx; let bw = battleCanvas.clientWidth; let bh = battleCanvas.clientHeight;
+                let data = campaigns[gameData.currentStage];
+
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,bw,bh);
+                ctx.fillStyle = '#451a03'; ctx.fillRect(0, bh - 20, bw, 20); // Ground lane
+
+                // Enemy Base Wall
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(bw - 45, bh - 80, 45, 60);
+
+                // Spawning Scaled Enemies
+                if (Date.now() > nextEnemySpawn && enemiesSpawned < data.enemyCount && !isVictory) {
+                    let isB = (enemiesSpawned === data.enemyCount - 1);
+                    enemyTroops.push({
+                        x: bw - 50, y: bh - 24 - (Math.random()*10), type: 'enemy',
+                        hp: isB ? (data.mobHp * 5) : data.mobHp, maxHp: isB ? (data.mobHp * 5) : data.mobHp,
+                        dmg: isB ? (data.mobDmg * 2.5) : data.mobDmg, range: 25, speed: isB ? 0.8 : 1.2, lastAttack: 0, frame: Math.random()*40
+                    });
+                    enemiesSpawned++; nextEnemySpawn = Date.now() + 1400;
+                }
+
+                // AI Loop for Heroes
+                activeTroops.forEach((t) => {
+                    t.frame++; let target = null; let near = 9999;
+                    enemyTroops.forEach(e => { let d = e.x - t.x; if(d > 0 && d < near) { near = d; target = e; } });
+                    
+                    let attk = false;
+                    if (target) {
+                        if (near <= t.range) {
+                            attk = true;
+                            if (Date.now() - t.lastAttack > 800) { t.lastAttack = Date.now(); target.hp -= t.dmg; damageTexts.push({ x: target.x, y: target.y - 22, txt: `💥 -${t.dmg}`, c: '#f43f5e' }); }
+                        } else { t.x += t.speed; }
+                    } else {
+                        if ((bw - 45) - t.x <= t.range) {
+                            attk = true;
+                            if (Date.now() - t.lastAttack > 800) { t.lastAttack = Date.now(); curFortHp -= t.dmg; if(curFortHp<0) curFortHp=0; document.getElementById("fortHpLabel").innerText = `KUTA NG KAAWAY HP: ${curFortHp}`; checkWin(); }
+                        } else { t.x += t.speed; }
+                    }
+                    drawRealisticSprite(ctx, t.x, t.y, t.type, attk, t.frame);
+                });
+
+                // AI Loop for Bad Guys
+                enemyTroops.forEach((e) => {
+                    e.frame++; let target = null; let near = 9999;
+                    activeTroops.forEach(t => { let d = e.x - t.x; if(d > 0 && d < near) { near = d; target = t; } });
+                    
+                    let attk = false;
+                    if (target) {
+                        if (near <= e.range) {
+                            attk = true;
+                            if (Date.now() - e.lastAttack > 900) { e.lastAttack = Date.now(); target.hp -= e.dmg; damageTexts.push({ x: target.x, y: target.y - 22, txt: `🪓 -${e.dmg}`, c: '#fbbf24' }); }
+                        } else { e.x -= e.speed; }
+                    } else { if(e.x > 40) e.x -= e.speed; }
+                    drawRealisticSprite(ctx, e.x, e.y, 'enemy', attk, e.frame);
+                });
+
+                activeTroops = activeTroops.filter(t => t.hp > 0);
+                let killed = enemyTroops.filter(e => e.hp <= 0).length;
+                if(killed > 0) { enemyTroops = enemyTroops.filter(e => e.hp > 0); curEnemyLeft -= killed; if(curEnemyLeft<0) curEnemyLeft=0; document.getElementById("enemyLeftLabel").innerText = `Natitirang Kawal: ${curEnemyLeft} / ${data.enemyCount}`; checkWin(); }
+            }
+
+            let ctx = window.gCtx || window.bCtx || window.uCtx;
+            if(ctx && damageTexts.length > 0) {
+                damageTexts.forEach((dt, idx) => {
+                    ctx.fillStyle = dt.c; ctx.font = 'bold 11px Rajdhani'; ctx.fillText(dt.txt, dt.x, dt.y);
+                    dt.y -= 0.7; dt.timer = (dt.timer || 0) + 1; if(dt.timer > 22) damageTexts.splice(idx, 1);
+                });
+            }
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
