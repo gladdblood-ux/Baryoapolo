@@ -165,6 +165,9 @@
     </div>
 
     <!-- UPGRADE SCREEN -->
+    <div style="position:absolute; bottom:10px; font-weight:bold; font-size:0.8rem; background:rgba(0,0,0,0.7); padding:4px 12px; border-radius:20px; border:1px solid #2563eb;" id="previewTitle">ARCHER MODEL PREVIEW</div>
+    <div id="anatomyLvlTxt" style="position:absolute; top:10px; font-weight:bold; font-size:1rem; color:#fbbf24; text-shadow: 2px 2px #000;">ANATOMY MODEL LVL 1</div>
+    
     <div id="upgradeScreen" class="screen" style="display:none;">
         <div class="game-header">
             <div class="hud-top-row">
@@ -174,10 +177,12 @@
                     <div class="stat elixir-text" id="uElixir">🧪 500</div>
                 </div>
             </div>
-            <div class="trooper-selector">
+                        <div class="trooper-selector">
                 <div class="select-card active" id="card_guerilla" onclick="selectUpgradeTroop('guerilla')">🏹 ARCHER</div>
                 <div class="select-card" id="card_guard" onclick="selectUpgradeTroop('guard')">⚔️ SWORDSMAN</div>
                 <div class="select-card" id="card_tank" onclick="selectUpgradeTroop('tank')">🛡️ TANK</div>
+                <div class="select-card" id="card_palaso" onclick="selectUpgradeTroop('palaso')">🏹 NAMAMALASO</div>
+                <div class="select-card" id="card_canon" onclick="selectUpgradeTroop('canon')">💣 NAG-CANON</div>
             </div>
         </div>
         <div class="upgrade-layout">
@@ -235,17 +240,22 @@
 
     <script>
         let currentUser = null;
-        let troopLevels = { guerilla: 1, guard: 1, tank: 1 };
-        let gameData = { gold: 1200, elixir: 1000, stone: 400, currentStage: 1, army: { guerilla: 15, guard: 12, tank: 5 } };
+        let troopLevels = { guerilla: 1, guard: 1, tank: 1, palaso: 1, canon: 1 };
+let gameData = { gold: 1200, elixir: 1000, stone: 400, currentStage: 1, army: { guerilla: 15, guard: 12, tank: 5, palaso: 10, canon: 5 } };
+
 
         // EXPONENTIAL HARDCORE DIFFICULTY SCALING FOR STAGES
-        const campaigns = {
-            1: { name: "Baryo Makisig (Madali)", boss: "Heneral Makisig", enemyCount: 12, fortHp: 1500, mobHp: 150, mobDmg: 20 },
-            2: { name: "Baryo Mausok (Katamtaman)", boss: "Heneral Kous", enemyCount: 22, fortHp: 5500, mobHp: 380, mobDmg: 55 },
-            3: { name: "Baryo Kalawan (Mahirap)", boss: "Pinunong Wan", enemyCount: 32, fortHp: 16000, mobHp: 900, mobDmg: 120 },
-            4: { name: "Gitnang Langit (Sumpa)", boss: "Luna Makaraig", enemyCount: 45, fortHp: 45000, mobHp: 2200, mobDmg: 280 },
-            5: { name: "San Luna Tonio (Katapusan)", boss: "Haring Tonio", enemyCount: 60, fortHp: 120000, mobHp: 6000, mobDmg: 650 }
+                const campaigns = {
+            1: { name: "Baryo Makisig (Madali)", boss: "Heneral Makisig", enemyCount: 12, fortHp: 1500, mobHp: 150, mobDmg: 20, weapon: "Palakol" },
+            2: { name: "Baryo Mausok (Katamtaman)", boss: "Heneral Kous", enemyCount: 22, fortHp: 5500, mobHp: 380, mobDmg: 55, weapon: "Itak" },
+            3: { name: "Baryo Kalawan (Mahirap)", boss: "Pinunong Wan", enemyCount: 32, fortHp: 16000, mobHp: 900, mobDmg: 120, weapon: "Sibat" },
+            4: { name: "Gitnang Langit (Sumpa)", boss: "Luna Makaraig", enemyCount: 45, fortHp: 45000, mobHp: 2200, mobDmg: 280, weapon: "Espada" },
+            5: { name: "San Luna Tonio (Tonio Ligan)", boss: "Haring Tonio", enemyCount: 60, fortHp: 120000, mobHp: 6000, mobDmg: 650, weapon: "Katana" },
+            6: { name: "jose asoncion (Baryo Mariposa)", boss: "Haring Jose", enemyCount: 100, fortHp: 1200000, mobHp: 60000, mobDmg: 800, weapon: "Palaso, Kabayo, at Tirador" },
+            7: { name: "Manuel Lorenzo (Lorenzo's)", boss: "Haring MANUEL", enemyCount: 60, fortHp: 12000000, mobHp: 7000, mobDmg: 1000, weapon: "Baril, Palaso, Pana, at Tirador" },
+            8: { name: "Lorenzo macapagal (Macapagal house)", boss: "Haring MANUEL", enemyCount: 60, fortHp: 120000000, mobHp: 10000, mobDmg: 2000, weapon: "Kanyon, Baril, Palaso, at Pana" }
         };
+
 
         let structures = [
             { id: 1, type: 'townhall', gridX: 4, gridY: 4, state: 'ready', progress: 100 },
@@ -382,11 +392,17 @@
         }
 
         function openUpgradeScreen() {
-            document.getElementById("baseScreen").style.display = "none";
-            document.getElementById("upgradeScreen").style.display = "flex";
-            window.uCtx = adjustCanvas(upgradeCanvas); window.gCtx = null;
-            selectUpgradeTroop(selectedUpgradeTroopType);
-        }
+    document.getElementById("baseScreen").style.display = "none";
+    document.getElementById("upgradeScreen").style.display = "flex";
+    window.uCtx = adjustCanvas(upgradeCanvas); window.gCtx = null;
+    
+    // DITO MO IPAPASTE ITONG DALAWANG LINYA PARA MAWALA ANG NULL:
+    document.getElementById("uGold").innerText = `🪙 ${gameData.gold}`;
+    document.getElementById("uElixir").innerText = `🧪 ${gameData.elixir}`;
+
+    selectUpgradeTroop(selectedUpgradeTroopType);
+}
+
 
         function closeUpgradeScreen() {
             document.getElementById("upgradeScreen").style.display = "none";
@@ -396,32 +412,67 @@
         }
 
         function selectUpgradeTroop(type) {
-            selectedUpgradeTroopType = type;
-            document.querySelectorAll('.select-card').forEach(c => c.classList.remove('active'));
-            document.getElementById(`card_${type}`).classList.add('active');
+    selectedUpgradeTroopType = type;
+    document.querySelectorAll('.select-card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`card_${type}`).classList.add('active');
 
-            let lvl = troopLevels[type];
-            let hp = type === 'tank' ? 550 : (type === 'guard' ? 300 : 160);
-            let dmg = type === 'tank' ? 26 : (type === 'guard' ? 55 : 60);
-            
-            let currentHp = Math.floor(hp * (1 + (lvl - 1) * 0.35));
-            let currentDmg = Math.floor(dmg * (1 + (lvl - 1) * 0.30));
+    let lvl = troopLevels[type] || 1; // Nilagyan ng || 1 para safe sa error
 
-            let names = { guerilla: "HIGH RANK ARCHER", guard: "MUSCULAR SWORDSMAN", tank: "ARMORED GIANT TANK" };
-            let ranges = { guerilla: "Malayong Distansya (130px)", guard: "Malapitan (25px)", tank: "Malapitan (25px)" };
+    // 1. DITO DINAGDAG YUNG BASE HP PARA SA MGA BAGONG CHARACTER
+    let hp = type === 'tank' ? 550 : 
+             (type === 'guard' ? 300 : 
+             (type === 'palaso' ? 180 : 
+             (type === 'canon' ? 250 : 160))); // Default ay 160 (guerilla)
 
-            document.getElementById("detailsName").innerText = names[type];
-            document.getElementById("detailsLevel").innerText = `Kasalukuyang Antas: Level ${lvl}`;
-            document.getElementById("statHp").innerText = `❤️ Buhay (HP): ${currentHp} (Susunod: +${Math.floor(hp*0.35)})`;
-            document.getElementById("statDmg").innerText = `🔥 Pinsala (Damage): ${currentDmg} (Susunod: +${Math.floor(dmg*0.30)})`;
-            document.getElementById("statRange").innerText = `🎯 Uri: ${ranges[type]}`;
-            document.getElementById("previewTitle").innerText = `${names[type]} LAB MODEL`;
+    // 2. DITO DINAGDAG YUNG BASE DAMAGE PARA SA MGA BAGONG CHARACTER
+    let dmg = type === 'tank' ? 26 : 
+              (type === 'guard' ? 55 : 
+              (type === 'palaso' ? 75 : 
+              (type === 'canon' ? 120 : 60))); // Default ay 60 (guerilla)
+    
+    let currentHp = Math.floor(hp * (1 + (lvl - 1) * 0.35));
+    let currentDmg = Math.floor(dmg * (1 + (lvl - 1) * 0.30));
 
-            let currency = type === 'guard' ? "Ginto" : "Elixir";
-            let icon = type === 'guard' ? "🪙" : "🧪";
-            let cost = lvl * 350;
-            document.getElementById("upgradeCostLabel").innerText = `${icon} ${cost} ${currency}`;
-        }
+    // 3. MGA PANGALAN NG BAGONG SUNDALO
+    let names = { 
+        guerilla: "HIGH RANK ARCHER", 
+        guard: "MUSCULAR SWORDSMAN", 
+        tank: "ARMORED GIANT TANK",
+        palaso: "ELITE NAMAMALASO",
+        canon: "HEAVY NAG-CANON"
+    };
+
+    // 4. DISTANSYA NG ATAKE NG BAGONG SUNDALO
+    let ranges = { 
+        guerilla: "Malayong Distansya (130px)", 
+        guard: "Malapitan (25px)", 
+        tank: "Malapitan (25px)",
+        palaso: "Napakalayong Distansya (160px)",
+        canon: "Malayong Pagsabog (110px)"
+    };
+
+    document.getElementById("detailsName").innerText = names[type] || "WALANG PANGALAN";
+    document.getElementById("detailsLevel").innerText = `Kasalukuyang Antas: Level ${lvl}`;
+    document.getElementById("statHp").innerText = `❤️ Buhay (HP): ${currentHp} (Susunod: +${Math.floor(hp*0.35)})`;
+    document.getElementById("statDmg").innerText = `🔥 Pinsala (Damage): ${currentDmg} (Susunod: +${Math.floor(dmg*0.30)})`;
+    document.getElementById("statRange").innerText = `🎯 Uri: ${ranges[type] || "Hindi Alam"}`;
+    document.getElementById("previewTitle").innerText = `${names[type] || "MODEL"} LAB MODEL`;
+    // Ito ang mag-aayos sa text sa canvas preview para maging Level 1, 2, atbp.
+let anatomyLabel = document.getElementById("anatomyLvlTxt") || document.querySelector(".preview-box");
+if(anatomyLabel && anatomyLabel.innerHTML.includes("ANATOMY MODEL LVL")) {
+    // Kung text element ito sa HTML mo, papalitan nito yung 'null' ng tamang level
+    anatomyLabel.innerText = `ANATOMY MODEL LVL ${lvl}`; 
+}
+
+
+    // 5. ANONG PERA ANG GAGAMITIN PANG-UPGRADE (Ginto o Elixir)
+    // Dito, ginawa nating Ginto si Guard, at Elixir naman ang natitirang apat.
+    let currency = type === 'guard' ? "Ginto" : "Elixir";
+    let icon = type === 'guard' ? "🪙" : "🧪";
+    let cost = lvl * 350;
+    document.getElementById("upgradeCostLabel").innerText = `${icon} ${cost} ${currency}`;
+}
+
 
         function executeTroopUpgrade() {
             let type = selectedUpgradeTroopType;
@@ -443,14 +494,19 @@
             selectUpgradeTroop(type);
         }
 
-        function trainTroop(type) {
+                function trainTroop(type) {
             if (type === 'guerilla' && gameData.elixir >= 30) { gameData.elixir -= 30; gameData.army.guerilla++; }
             else if (type === 'guard' && gameData.gold >= 50) { gameData.gold -= 50; gameData.army.guard++; }
             else if (type === 'tank' && gameData.elixir >= 70) { gameData.elixir -= 70; gameData.army.tank++; }
+            // Eto ang idinagdag para kay Palaso at Canon:
+            else if (type === 'palaso' && gameData.elixir >= 100) { gameData.elixir -= 100; gameData.army.palaso++; }
+            else if (type === 'canon' && gameData.gold >= 250) { gameData.gold -= 250; gameData.army.canon++; }
             else { return alert("Kulang ang yaman mo para magsanay ng bagong kawal!"); }
+            
             syncHUD();
             autoSaveGame();
         }
+
 
         function deployBattleTroop(type) {
             if (gameData.army[type] <= 0) return;
@@ -570,14 +626,26 @@
                 ctx.beginPath(); ctx.roundRect(-5, -12, 10, 10, 2); ctx.fill();
                 ctx.fillStyle = '#1e293b'; ctx.fillRect(-5, -5, 10, 2); // Heavy Leather Belt
             } 
-            else if (type === 'tank') {
+                        else if (type === 'tank') {
                 ctx.fillStyle = '#475569'; // Heavy Steel Core Armor
                 ctx.beginPath(); ctx.roundRect(-8, -17, 16, 15, 4); ctx.fill();
                 ctx.fillStyle = '#64748b'; ctx.fillRect(-6, -14, 12, 9);
             }
+            // >>> DITO MO IKAKALAT AT IPAPASTE ITONG NASA IBABA: <<<
+            else if (type === 'palaso') {
+                ctx.fillStyle = '#065f46'; // Dark Emerald Ranger Tunic
+                ctx.beginPath(); ctx.roundRect(-5, -12, 10, 10, 2); ctx.fill();
+                ctx.fillStyle = '#78350f'; ctx.fillRect(-5, -5, 10, 2.5); // Leather Belt
+            } 
+            else if (type === 'canon') {
+                ctx.fillStyle = '#1e1b4b'; // Midnight Blue Heavy Armor
+                ctx.beginPath(); ctx.roundRect(-7, -15, 14, 13, 4); ctx.fill();
+                ctx.fillStyle = '#fbbf24'; ctx.fillRect(-7, -9, 14, 2); // Ammo Belt
+            }
 
             // 3. HANDS & WEAPON SWING DYNAMICS
             ctx.fillStyle = '#fbcfe8'; // Skin tone
+
             
             // Shield Hand (Left)
             ctx.save();
@@ -590,10 +658,17 @@
             }
             ctx.restore();
 
-            // Attacking Slash Hand (Right)
+                        // Attacking Slash Hand (Right)
             ctx.save();
             ctx.translate(5, -10);
-            ctx.rotate(0.3 + att * 1.6); // Slash rotation arc
+            
+            // DITO BINAGO: Kapag palaso o canon, huwag silang iikutin ng pang-slash!
+            if (type === 'palaso' || type === 'canon') {
+                ctx.rotate(0.1); // Naka-steady lang ang baril/pana paharap
+            } else {
+                ctx.rotate(0.3 + att * 1.6); // Para lang sa mga may espada/palakol
+            }
+            
             ctx.fillRect(0, 0, 2.8, 7);
 
             if (type === 'apolo') {
@@ -606,8 +681,21 @@
             } else if (type === 'guerilla') {
                 ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2; // Longbow Compound Curved
                 ctx.beginPath(); ctx.arc(4, 2, 6, -Math.PI/2, Math.PI/2); ctx.stroke();
+            } else if (type === 'palaso') {
+                // Fixed Elite Bow Coordinates
+                ctx.strokeStyle = '#b45309'; ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.arc(3, 2, 8, -Math.PI/2, Math.PI/2); ctx.stroke();
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.5; // Glowing Arrow
+                ctx.beginPath(); ctx.moveTo(2, 2); ctx.lineTo(-6, 2); ctx.stroke();
+            } else if (type === 'canon') {
+                // Fixed Heavy Cannon Position
+                ctx.fillStyle = '#334155'; ctx.fillRect(0, 0, 15, 7); // Katawan ng Kanyon
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(12, -1, 4, 9); // Bukana ng Kanyon
+                ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(2, 3, 2, 0, Math.PI*2); ctx.fill();
             }
+            
             ctx.restore();
+
 
             // 4. FACE & HEAD ANATOMY (With Hair and Beard)
             ctx.translate(0, -13);
