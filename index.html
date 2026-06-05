@@ -153,14 +153,19 @@
                 <button class="btn attack-btn" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow:0 3px 0 #172554;" onclick="openUpgradeScreen()">🧬 LABORATORYO NG LABAN<br><span style="color:#bfdbfe;">I-upgrade ang Lakas/Anatomy</span></button>
             </div>
             <div class="row" style="flex:1.1;">
-                <button class="btn attack-btn" style="width:100%; font-size:0.85rem;" onclick="initBattleField()">⚔️ LALAKBAYIN ANG DIGMAAN<br><span id="stageTargetLabel" style="font-size:0.7rem; color:#fca5a5; font-family:'Rajdhani'; font-weight:bold;">Target: Stage 1</span></button>
+                                        <button class="btn attack-btn" style="width:100%; font-size:0.85rem;" onclick="initBattleField()">⚔️ LALAKBAYIN ANG DIGMAAN<br><span id="stageTargetLabel" style="font-size:0.7rem; color:#fca5a5; font-family:'Rajdhani'; font-weight:bold;">Target: Stage 1</span></button>
             </div>
             <div style="font-size:0.65rem; color:#fbbf24; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">Mag-Sanay ng Hukbo (Barracks):</div>
             <div class="row">
                 <button class="btn build-btn" style="background:#1d4ed8;" onclick="trainTroop('guerilla')">🏹 ARCHER (<span id="btnLvlA">Lvl.1</span>)<br><span>🧪30 Elixir</span></button>
                 <button class="btn build-btn" style="background:#334155;" onclick="trainTroop('guard')">⚔️ SWORDSMAN (<span id="btnLvlS">Lvl.1</span>)<br><span>🪙50 Ginto</span></button>
                 <button class="btn build-btn" style="background:#065f46;" onclick="trainTroop('tank')">🛡️ GIANT TANK (<span id="btnLvlT">Lvl.1</span>)<br><span>🧪70 Elixir</span></button>
+                
+                <!-- DITO MO MAKIKITA ANG PAGBABAGO! IDINAGDAG NATIN ITONG DALAWA: -->
+                <button class="btn build-btn" style="background:#047857;" onclick="trainTroop('palaso')">🏹 PALASO (<span id="btnLvlP">Lvl.1</span>)<br><span>🧪100 Elixir</span></button>
+                <button class="btn build-btn" style="background:#4338ca;" onclick="trainTroop('canon')">💣 CANON (<span id="btnLvlC">Lvl.1</span>)<br><span>🪙250 Ginto</span></button>
             </div>
+
         </div>
     </div>
 
@@ -226,17 +231,23 @@
         <div id="gameContainer"><canvas id="battleCanvas"></canvas></div>
         <div id="controls" style="height:38vh; padding:8px;">
             <div style="font-size:0.65rem; color:#facc15; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">I-deploy ang mga Maangas mong Sundalo:</div>
-            <div class="row">
+            <div class="row" style="flex-wrap: wrap; gap: 4px;">
                 <button class="btn build-btn" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);" onclick="deployBattleTroop('guerilla')">🏹 ARCHER DEPLOY<br><span>Reserba: <b id="bCountA">0</b></span></button>
                 <button class="btn build-btn" style="background:linear-gradient(135deg, #475569, #334155);" onclick="deployBattleTroop('guard')">⚔️ SWORDSMAN DEPLOY<br><span>Reserba: <b id="bCountS">0</b></span></button>
                 <button class="btn build-btn" style="background:linear-gradient(135deg, #059669, #065f46);" onclick="deployBattleTroop('tank')">🛡️ GIANT TANK DEPLOY<br><span>Reserba: <b id="bCountT">0</b></span></button>
+                
+                <!-- DALAWA PANG MAANGAS NA DEPLOYMENT BUTTONS: -->
+                <button class="btn build-btn" style="background:linear-gradient(135deg, #047857, #064e3b);" onclick="deployBattleTroop('palaso')">🏹 PALASO DEPLOY<br><span>Reserba: <b id="bCountP">0</b></span></button>
+                <button class="btn build-btn" style="background:linear-gradient(135deg, #4338ca, #312e81);" onclick="deployBattleTroop('canon')">💣 CANON DEPLOY<br><span>Reserba: <b id="bCountC">0</b></span></button>
             </div>
+            
             <div class="row" style="flex:0.4; background: rgba(239, 68, 68, 0.15); padding: 4px; border-radius: 4px; align-items: center; justify-content: center; border: 1px solid rgba(239,68,68,0.3);">
                 <div style="font-size:0.85rem; color:#fca5a5; font-weight:bold; font-family:'Rajdhani';" id="enemyLeftLabel">Natitirang Kawal: 15 / 15</div>
             </div>
             <button class="btn build-btn" style="height:36px; background:#1e293b; font-size:0.75rem; font-family:'Cinzel';" onclick="backToCamp()">🏃 UMATRAS BALIK SA BASE</button>
         </div>
     </div>
+
 
     <script>
         let currentUser = null;
@@ -917,6 +928,7 @@ if(anatomyLabel && anatomyLabel.innerHTML.includes("ANATOMY MODEL LVL")) {
             setTimeout(() => { tb.style.display = "none"; }, 1500);
         }
     </script> <script src="shop.js"></script>
+    <script src="game.js"></script>
 
 </body>
 </html>
